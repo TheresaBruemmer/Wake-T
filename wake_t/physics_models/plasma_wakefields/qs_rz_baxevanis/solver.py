@@ -442,9 +442,9 @@ def calculate_psi_and_derivatives_at_particles(r, pr, q, idx, r_max, dr_p, pc):
     """
     # Initialize arrays.
     n_part = r.shape[0]
-    psi = np.zeros(n_part)
-    dr_psi = np.zeros(n_part)
-    dxi_psi = np.zeros(n_part)
+    psi = np.empty(n_part)
+    dr_psi = np.empty(n_part)
+    dxi_psi = np.empty(n_part)
 
     # Initialize value of sums.
     sum_1 = 0.
@@ -601,8 +601,8 @@ def calculate_psi(r_fld, r, q, idx, r_max, pc):
     """
     # Initialize arrays with values of psi and sums at plasma particles.
     n_part = r.shape[0]
-    sum_1_arr = np.zeros(n_part)
-    sum_2_arr = np.zeros(n_part)
+    sum_1_arr = np.empty(n_part)
+    sum_2_arr = np.empty(n_part)
     sum_1 = 0.
     sum_2 = 0.
 
@@ -620,7 +620,7 @@ def calculate_psi(r_fld, r, q, idx, r_max, pc):
 
     # Initialize array for psi at r_fld locations.
     n_points = r_fld.shape[0]
-    psi = np.zeros(n_points)
+    psi = np.empty(n_points)
 
     # Calculate fields at r_fld.
     i_last = 0
@@ -808,7 +808,7 @@ def calculate_b_theta_at_particles(r, pr, q, gamma, psi, dr_psi, dxi_psi,
     n_part = r.shape[0]
 
     # Preallocate field array.
-    b_theta_bar = np.zeros(n_part)
+    b_theta_bar = np.empty(n_part)
 
     # Calculate field value at plasma particles by interpolating between two
     # neighboring values. Same as with psi and its derivaties.
@@ -886,7 +886,7 @@ def calculate_b_theta(r_fld, r, pr, q, gamma, psi, dr_psi, dxi_psi, b_theta_0,
     # Calculate fields at r_fld
     n_part = r.shape[0]
     n_points = r_fld.shape[0]
-    b_theta_mesh = np.zeros(n_points)
+    b_theta_mesh = np.empty(n_points)
     i_last = 0
     for j in range(n_points):
         r_j = r_fld[j]
@@ -953,10 +953,10 @@ def calculate_ai_bi_from_axis(r, pr, q, gamma, psi, dr_psi, dxi_psi, b_theta_0,
     n_part = r.shape[0]
 
     # Preallocate arrays
-    K = np.zeros(n_part)
-    U = np.zeros(n_part)
-    T = np.zeros(n_part)
-    P = np.zeros(n_part)
+    K = np.empty(n_part)
+    U = np.empty(n_part)
+    T = np.empty(n_part)
+    P = np.empty(n_part)
 
     # Establish initial conditions (K_0 = 1, U_0 = 0, O_0 = 0, P_0 = 0)
     K_im1 = 1.
@@ -1070,10 +1070,10 @@ def calculate_ai_bi_from_edge(r, pr, q, gamma, psi, dr_psi, dxi_psi, b_theta_0,
     n_part = r.shape[0]
 
     # Preallocate arrays
-    K = np.zeros(n_part+1)
-    U = np.zeros(n_part+1)
-    T = np.zeros(n_part+1)
-    P = np.zeros(n_part+1)
+    K = np.empty(n_part+1)
+    U = np.empty(n_part+1)
+    T = np.empty(n_part+1)
+    P = np.empty(n_part+1)
 
     # Initial conditions at i = N+1
     K_ip1 = 0.
