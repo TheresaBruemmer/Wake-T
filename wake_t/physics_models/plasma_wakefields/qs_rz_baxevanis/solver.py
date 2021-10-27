@@ -296,7 +296,6 @@ def motion_derivatives(dxi, dr_p, xi, r, pr, q, a2_rz, nabla_a2_rz,
     return dr, dpr
 
 
-@njit()
 def calculate_derivatives(dxi, dr_p, r_max, r, pr, q, b_theta_0, nabla_a2, a2,
                           idx, pc):
     """
@@ -338,34 +337,24 @@ def calculate_derivatives(dxi, dr_p, r_max, r, pr, q, b_theta_0, nabla_a2, a2,
         The parabolic density profile coefficient.
 
     """
-    # Preallocate arrays.
-    n_part = r.shape[0]
-    dr = np.empty(n_part)
-    dpr = np.empty(n_part)
-    gamma = np.empty(n_part)
 
     # Calculate wakefield potential and its derivaties at particle positions.
     psi, dr_psi, dxi_psi = calculate_psi_and_derivatives_at_particles(
         r, pr, q, idx, r_max, dr_p, pc)
 
     # Calculate gamma (Lorentz factor) of particles.
-    for i in range(n_part):
-        psi_i = psi[i]
-        gamma[i] = (1. + pr[i] ** 2 + a2[i] + (1. + psi_i) ** 2) / (
-                2. * (1. + psi_i))
+    gamma = (1. + pr ** 2 + a2 + (1. + psi) ** 2) / (2. * (1. + psi))
 
     # Calculate azimuthal magnetic field from plasma at particle positions.
     b_theta_bar = calculate_b_theta_at_particles(
         r, pr, q, gamma, psi, dr_psi, dxi_psi, b_theta_0, nabla_a2, idx, dr_p)
 
     # Calculate derivatives of r and pr.
-    for i in range(n_part):
-        psi_i = psi[i]
-        dpr[i] = dxi * (gamma[i] * dr_psi[i] / (1. + psi_i)
-                        - b_theta_bar[i]
-                        - b_theta_0[i]
-                        - nabla_a2[i] / (2. * (1. + psi_i)))
-        dr[i] = dxi * pr[i] / (1. + psi_i)
+    dpr = dxi * (gamma * dr_psi / (1. + psi)
+                    - b_theta_bar
+                    - b_theta_0
+                    - nabla_a2 / (2. * (1. + psi)))
+    dr = dxi * pr / (1. + psi)
     return dr, dpr
 
 
