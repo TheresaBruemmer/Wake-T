@@ -8,7 +8,7 @@ for the full details about this model.
 
 import numpy as np
 import scipy.constants as ct
-from numba import njit, vectorize
+from numba import njit, vectorize, float64
 import aptools.plasma_accel.general_equations as ge
 
 from wake_t.particles.deposition import deposit_3d_distribution
@@ -353,11 +353,13 @@ def calculate_derivatives(dxi, dr_p, r_max, r, pr, q, b_theta_0, nabla_a2, a2,
 
     # Calculate derivatives of r and pr.
     dr = calculate_dr(dxi, pr, psi)
-    dpr = calculate_dpr(dxi, gamma, psi, dr_psi, b_theta_bar, b_theta_0, nabla_a2)
+    dpr = calculate_dpr(
+        dxi, gamma, psi, dr_psi, b_theta_bar, b_theta_0, nabla_a2)
     return dr, dpr
 
 
-@vectorize()
+@vectorize(
+    [float64(float64, float64, float64, float64, float64, float64, float64)])
 def calculate_dpr(dxi, gamma, psi, dr_psi, b_theta_bar, b_theta_0, nabla_a2):
     return dxi * (gamma * dr_psi / (1. + psi)
                         - b_theta_bar
@@ -365,17 +367,17 @@ def calculate_dpr(dxi, gamma, psi, dr_psi, b_theta_bar, b_theta_0, nabla_a2):
                         - nabla_a2 / (2. * (1. + psi)))
 
 
-@vectorize()
+@vectorize([float64(float64, float64, float64)])
 def calculate_dr(dxi, pr, psi):
     return dxi * pr / (1. + psi)
 
 
-@vectorize()
+@vectorize([float64(float64, float64, float64)])
 def calculate_gamma(pr, psi, a2):
     return (1. + pr ** 2 + a2 + (1. + psi) ** 2) / (2. * (1. + psi))
 
 
-@vectorize()
+@vectorize([float64(float64, float64, float64)])
 def calculate_pz(pr, psi, a2):
     return (1. + pr ** 2 + a2 - (1. + psi) ** 2) / (2. * (1. + psi))
 
