@@ -520,7 +520,7 @@ def calculate_psi_and_derivatives_at_particles(r, pr, q, idx, r_max, dr_p, pc):
     # Boundary condition for psi (Force potential to be zero either at the
     # plasma edge or after the last particle, whichever is further away).
     r_furthest = max(r_right, r_max)
-    psi = psi - delta_psi_eq(r_furthest, sum_1, sum_2, r_max, pc)
+    psi -= delta_psi_eq(r_furthest, sum_1, sum_2, r_max, pc)
 
     # In theory, psi cannot be smaller than -1. However, it has been observed
     # than in very strong blowouts, near the peak, values below -1 can appear
@@ -568,10 +568,10 @@ def calculate_psi_and_derivatives_at_particles(r, pr, q, idx, r_max, dr_p, pc):
 
     # Apply longitudinal derivative of the boundary conditions of psi.
     if r_right <= r_max:
-        dxi_psi = dxi_psi + sum_3
+        dxi_psi += sum_3
     else:
-        dxi_psi = dxi_psi + sum_3 - ((sum_1 - r_max**2/2 - pc*r_max/4)
-                                     * pr_i / (r_right * (1 + psi_i)))
+        dxi_psi += sum_3 - ((sum_1 - r_max**2/2 - pc*r_max/4)
+                            * pr_i / (r_right * (1 + psi_i)))
 
     # Again, near the peak of a strong blowout, very large and unphysical
     # values could appear. This condition makes sure a threshold us not
@@ -579,7 +579,7 @@ def calculate_psi_and_derivatives_at_particles(r, pr, q, idx, r_max, dr_p, pc):
     for i in range(n_part):
         if dxi_psi[i] > 3.:
             dxi_psi[i] = 3.
-        if dxi_psi[i] < -3.:
+        elif dxi_psi[i] < -3.:
             dxi_psi[i] = -3.
 
     return psi, dr_psi, dxi_psi
@@ -825,21 +825,23 @@ def calculate_b_theta_at_particles(r, pr, q, gamma, psi, dr_psi, dxi_psi,
     # neighboring values. Same as with psi and its derivaties.
     for i_sort in range(n_part):
         i = idx[i_sort]
+        im1 = idx[i_sort-1]
+        ip1 = idx[i_sort+1]
         r_i = r[i]
         if i_sort > 0:
-            r_im1 = r[idx[i_sort-1]]
-            a_im1 = a_i[idx[i_sort-1]]
-            b_im1 = b_i[idx[i_sort-1]]
+            r_im1 = r[im1]
+            a_im1 = a_i[im1]
+            b_im1 = b_i[im1]
             r_left = (r_im1 + r_i) / 2
             b_theta_left = a_im1 * r_left + b_im1 / r_left
         else:
             b_theta_left = 0.
             r_left = 0.
         if i_sort < n_part - 1:
-            r_ip1 = r[idx[i_sort+1]]
+            r_ip1 = r[ip1]
+            r_right = (r_i + r_ip1) / 2
         else:
-            r_ip1 = r[i] * dr_p / 2
-        r_right = (r_i + r_ip1) / 2
+            r_right = r_i + dr_p / 2
         b_theta_right = a_i[i] * r_right + b_i[i] / r_right
 
         # Do interpolation.
@@ -852,11 +854,9 @@ def calculate_b_theta_at_particles(r, pr, q, gamma, psi, dr_psi, dxi_psi,
         # exceeded.
         if b_theta_bar[i] > 3.:
             b_theta_bar[i] = 3.
-        if b_theta_bar[i] < -3.:
+        elif b_theta_bar[i] < -3.:
             b_theta_bar[i] = -3.
 
-        a_im1 = a_i[i]
-        b_im1 = b_i[i]
     return b_theta_bar
 
 
