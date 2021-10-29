@@ -157,11 +157,10 @@ def calculate_wakefields(laser_a2, beam_part, r_max, xi_min, xi_max,
         pr[idx_keep] = 0.
 
         # Calculate fields at specified radii for current plasma column.
-        psi[i-2, 2:-2] = calculate_psi(
-            r_fld, r, q, idx, r_max_plasma, parabolic_coefficient)
-        b_theta_bar[i-2, 2:-2] = calculate_b_theta(
-            r_fld, r, pr, q, gamma, psi_p, dr_psi_p, dxi_psi_p, b_theta_0,
-            nabla_a2, idx)
+        calculate_psi(psi[i-2, 2:-2], r_fld, r, q, idx, r_max_plasma,
+                      parabolic_coefficient)
+        calculate_b_theta(b_theta_bar[i-2, 2:-2], r_fld, r, pr, q, gamma,
+                          psi_p, dr_psi_p, dxi_psi_p, b_theta_0, nabla_a2, idx)
 
         # Deposit rho and chi of plasma column
         w_rho = q / (dr * r * (1 - pz/gamma))
@@ -587,7 +586,7 @@ def calculate_psi_and_derivatives_at_particles(r, pr, q, idx, r_max, dr_p, pc):
 
 
 @njit()
-def calculate_psi(r_fld, r, q, idx, r_max, pc):
+def calculate_psi(psi, r_fld, r, q, idx, r_max, pc):
     """
     Calculate the wakefield potential at the radial
     positions specified in r_fld. This is done by using Eq. (29) in
@@ -595,8 +594,12 @@ def calculate_psi(r_fld, r, q, idx, r_max, pc):
 
     Parameters:
     -----------
+    psi : array
+        Array into which the calculated `psi` will be stored.
+
     r_fld : array
         Array containing the radial positions where psi should be calculated.
+        Has same dimensions as `psi`.
 
     r, q : array
         Arrays containing the radial position, and charge of the
@@ -631,13 +634,9 @@ def calculate_psi(r_fld, r, q, idx, r_max, pc):
         sum_2_arr[i] = sum_2
     r_N = r_i
 
-    # Initialize array for psi at r_fld locations.
-    n_points = r_fld.shape[0]
-    psi = np.empty(n_points)
-
     # Calculate fields at r_fld.
     i_last = 0
-    for j in range(n_points):
+    for j in range(r_fld.shape[0]):
         r_j = r_fld[j]
         # Get index of last plasma particle with r_i < r_j, continuing from
         # last particle found in previous iteration.
@@ -661,8 +660,7 @@ def calculate_psi(r_fld, r, q, idx, r_max, pc):
 
     # Apply boundary conditions.
     r_furthest = max(r_N, r_max)
-    psi = psi - delta_psi_eq(r_furthest, sum_1, sum_2, r_max, pc)
-    return psi
+    psi -= delta_psi_eq(r_furthest, sum_1, sum_2, r_max, pc)
 
 
 @njit()
@@ -863,8 +861,9 @@ def calculate_b_theta_at_particles(r, pr, q, gamma, psi, dr_psi, dxi_psi,
 
 
 @njit()
-def calculate_b_theta(r_fld, r, pr, q, gamma, psi, dr_psi, dxi_psi, b_theta_0,
-                      nabla_a2, idx):
+def calculate_b_theta(
+        b_theta_mesh, r_fld, r, pr, q, gamma, psi, dr_psi, dxi_psi, b_theta_0,
+        nabla_a2, idx):
     """
     Calculate the azimuthal magnetic field from the plasma at the radial
     locations in r_fld using Eqs. (24), (26) and (27) from the paper
@@ -872,8 +871,12 @@ def calculate_b_theta(r_fld, r, pr, q, gamma, psi, dr_psi, dxi_psi, b_theta_0,
 
     Parameters:
     -----------
+    b_theta_mesh : array
+        Array into which the calculated `b_theta` will be stored.
+
     r_fld : array
         Array containing the radial positions where psi should be calculated.
+        Has same dimensions as `b_theta_mesh`.
 
     r, pr, q, gamma : arrays
         Arrays containing, respectively, the radial position, radial momentum,
@@ -896,16 +899,12 @@ def calculate_b_theta(r_fld, r, pr, q, gamma, psi, dr_psi, dxi_psi, b_theta_0,
     a_i, b_i, a_0 = calculate_ai_bi_from_edge(
         r, pr, q, gamma, psi, dr_psi, dxi_psi, b_theta_0, nabla_a2, idx)
 
-    # Calculate fields at r_fld
-    n_part = r.shape[0]
-    n_points = r_fld.shape[0]
-    b_theta_mesh = np.empty(n_points)
     i_last = 0
-    for j in range(n_points):
+    for j in range(r_fld.shape[0]):
         r_j = r_fld[j]
         # Get index of last plasma particle with r_i < r_j, continuing from
         # last particle found in previous iteration.
-        for i_sort in range(i_last, n_part):
+        for i_sort in range(i_last, r.shape[0]):
             i_p = idx[i_sort]
             r_i = r[i_p]
             i_last = i_sort
@@ -919,8 +918,6 @@ def calculate_b_theta(r_fld, r, pr, q, gamma, psi, dr_psi, dxi_psi, b_theta_0,
         else:
             i_p = idx[i_last]
             b_theta_mesh[j] = a_i[i_p] * r_j + b_i[i_p] / r_j
-
-    return b_theta_mesh
 
 
 @njit()
