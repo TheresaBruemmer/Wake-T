@@ -126,6 +126,15 @@ class LaserPulse():
             self.a_env, self.a_env_old, chi, k_0, k_p, **self.solver_params,
             start_outside_plasma=start_outside_plasma)
 
+        # Apply `r_max`.
+        if self.r_max is not None:
+            r_max = self.solver_params['rmax']
+            nr = self.solver_params['nr']
+            dr = r_max / nr
+            r = np.linspace(dr/2, r_max-dr/2, nr)
+            a_env_old[:, r > self.r_max] = 0.
+            a_env[:, r > self.r_max] = 0.
+
         # Update arrays and step count.
         self.a_env_old[:] = a_env_old[0: -2]
         self.a_env = a_env[0: -2]
