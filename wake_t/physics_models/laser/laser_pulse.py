@@ -243,7 +243,8 @@ class GaussianPulse(LaserPulse):
         if self.polarization == 'linear':
             avg_amplitude /= np.sqrt(2)
         # Apply `r_max`
-        gaussian_profile = np.where(r > self.r_max, 0., gaussian_profile)
+        if self.r_max is not None:
+            gaussian_profile = np.where(r > self.r_max, 0., gaussian_profile)
         return avg_amplitude / diff_factor * gaussian_profile
 
 
