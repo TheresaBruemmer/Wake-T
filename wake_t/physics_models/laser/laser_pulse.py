@@ -187,7 +187,7 @@ class GaussianPulse(LaserPulse):
     """Class defining a Gaussian laser pulse."""
 
     def __init__(self, xi_c, a_0, w_0, tau, z_foc=None, l_0=0.8e-6,
-                 cep_phase=0., polarization='linear'):
+                 cep_phase=0., polarization='linear', r_max=None):
         """
         Initialize Gaussian pulse.
 
@@ -223,6 +223,7 @@ class GaussianPulse(LaserPulse):
         self.z_r = np.pi * w_0**2 / l_0
         self.cep_phase = cep_phase
         self.polarization = polarization
+        self.r_max = r_max
 
     def envelope_function(self, xi, r, z_pos):
         """
@@ -241,6 +242,8 @@ class GaussianPulse(LaserPulse):
         avg_amplitude = self.a_0
         if self.polarization == 'linear':
             avg_amplitude /= np.sqrt(2)
+        # Apply `r_max`
+        gaussian_profile = np.where(r > self.r_max, 0., gaussian_profile)
         return avg_amplitude / diff_factor * gaussian_profile
 
 
